@@ -5,20 +5,12 @@ xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
 xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
 http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
 	<servlet>
-		<servlet-name>UploadFileServlet</servlet-name>
-		<servlet-class>com.cloudstorage.UploadFileServlet</servlet-class>
-	</servlet>
-	<servlet-mapping>
-		<servlet-name>UploadFileServlet</servlet-name>
-		<url-pattern>/uploadfile</url-pattern>
-	</servlet-mapping>
-	<servlet>
 		<servlet-name>DistributedStorage</servlet-name>
 		<servlet-class>com.cloudstorage.DistributedStorageServlet</servlet-class>
 	</servlet>
 	<servlet-mapping>
 		<servlet-name>DistributedStorage</servlet-name>
-		<url-pattern>/distributedstorage</url-pattern>
+		<url-pattern>/gcs/*</url-pattern>
 	</servlet-mapping>
 	
 	
