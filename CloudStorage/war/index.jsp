@@ -26,9 +26,12 @@
     
     <form action="/index.html" method="get" name="submitGet">
           <table>
-          <tr>
+            <tr>
           	<td><input type="text" name ="fileName"/></td>
             <td><input type="submit" onclick='changeGetPath(this)' value="Download Content" name="download"/></td>
+            </tr>
+            <tr>
+            	<td><input type="submit" onclick='listAllFiles()' value="List Content" name="download"/></td>
             </tr>
           </table>
     </form>
@@ -64,12 +67,16 @@
     	function changeGetPath() {
             var filename = document.forms["submitGet"]["fileName"].value;
             if (bucket == null || bucket == "" || filename == null || filename == "") {
-              alert("Both Bucket and FileName are required");
+              alert("Both Bucket and FileName are required.");
               return false;
             } else {
-              document.submitGet.action = "/gcs/" + bucket + "/" + filename;
+              document.submitGet.action = "/gcs/" + bucket + "/download/" + filename;
             }
         }
+	
+	function listAllFiles() {
+		document.submitGet.action = "/gcs/" + bucket + "/list/";
+	}
     	
     
     </script>

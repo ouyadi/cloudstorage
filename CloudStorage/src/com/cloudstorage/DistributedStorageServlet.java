@@ -9,6 +9,8 @@ import com.google.appengine.tools.cloudstorage.GcsInputChannel;
 import com.google.appengine.tools.cloudstorage.GcsOutputChannel;
 import com.google.appengine.tools.cloudstorage.GcsService;
 import com.google.appengine.tools.cloudstorage.GcsServiceFactory;
+import com.google.appengine.tools.cloudstorage.ListOptions;
+import com.google.appengine.tools.cloudstorage.ListResult;
 import com.google.appengine.tools.cloudstorage.RetryParams;
 
 import org.apache.commons.fileupload.FileItemStream;
@@ -25,6 +27,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringWriter;
 import java.nio.channels.Channels;
+import java.util.ArrayList;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -43,21 +46,51 @@ public class DistributedStorageServlet extends HttpServlet {
     .totalRetryPeriodMillis(15000)
     .build());
 	
+	private final DistributedStorageHandler dsHandler = new DistributedStorageHandler();
+	
 	private static final int BUFFER_SIZE = 100 * 1024 * 1024;
 	
 	@Override
 	  public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-	    GcsFilename fileName = getFileName(req);
-	    GcsInputChannel readChannel = gcsService.openPrefetchingReadChannel(fileName, 0, BUFFER_SIZE);
-	    copy(Channels.newInputStream(readChannel), resp.getOutputStream());
-	    String mimeType = gcsService.getMetadata(fileName).getOptions().getMimeType();
-	    if(mimeType==null){
-	    	mimeType = "application/octet-stream";
+		
+		String[] splits = req.getRequestURI().split("/", 5);
+
+	    if (!splits[0].equals("") || !splits[1].equals("gcs")) 
+	    {
+	      throw new IllegalArgumentException("The URL is not formed as expected. " +
+	          "Expecting /upload/<bucket>/<object>");
 	    }
-	    resp.setContentType(mimeType);
-	    String headerKey = "Content-Disposition";
-	    String headerValue = String.format("attachment;filename=\"%s\"", fileName.getObjectName());
-	    resp.setHeader(headerKey, headerValue);
+	    else if (splits[3].equals("download")) 
+	    {
+	    	dsHandler.retrieve(splits[2], splits[4], resp);
+	    }
+	    else if(splits[3].equals("list"))
+	    {
+	    	ArrayList<String> fileNames = dsHandler.listing(splits[2], splits[4]);
+	    	for(String fileName : fileNames) {
+				System.out.println(fileName);
+	    	}
+	    }
+	    else
+	    {
+		      throw new IllegalArgumentException("Unexpected URI");
+	    }
+	    
+		
+		
+//		System.out.println(req);
+//		processGetRequest(req);
+//	    GcsFilename fileName = getFileName(req);
+//	    GcsInputChannel readChannel = gcsService.openPrefetchingReadChannel(fileName, 0, BUFFER_SIZE);
+//	    copy(Channels.newInputStream(readChannel), resp.getOutputStream());
+//	    String mimeType = gcsService.getMetadata(fileName).getOptions().getMimeType();
+//	    if(mimeType==null){
+//	    	mimeType = "application/octet-stream";
+//	    }
+//	    resp.setContentType(mimeType);
+//	    String headerKey = "Content-Disposition";
+//	    String headerValue = String.format("attachment;filename=\"%s\"", fileName.getObjectName());
+//	    resp.setHeader(headerKey, headerValue);
 	  }
 	
 	@Override
@@ -100,7 +133,7 @@ public class DistributedStorageServlet extends HttpServlet {
 	}
 	
 	private GcsFilename getFileName(HttpServletRequest req) {
-	    String[] splits = req.getRequestURI().split("/", 4);
+	    String[] splits = req.getRequestURI().split("/", 5);
 	    if (!splits[0].equals("") || !splits[1].equals("gcs")) {
 	      throw new IllegalArgumentException("The URL is not formed as expected. " +
 	          "Expecting /upload/<bucket>/<object>");
@@ -122,6 +155,31 @@ public class DistributedStorageServlet extends HttpServlet {
 	    }
 	}
 	
+	private void processGetRequest(HttpServletRequest req) {
+	    String[] splits = req.getRequestURI().split("/", 5);
+
+	    if (!splits[0].equals("") || !splits[1].equals("gcs")) 
+	    {
+	      throw new IllegalArgumentException("The URL is not formed as expected. " +
+	          "Expecting /upload/<bucket>/<object>");
+	    }
+	    else if (splits[3].equals("download")) 
+	    {
+	    	
+	    }
+	    else if(splits[3].equals("list"))
+	    {
+	    	ArrayList<String> fileNames = dsHandler.listing(splits[3], "");
+	    	for(String fileName : fileNames) {
+				System.out.println(fileName);
+	    	}
+	    }
+	    else
+	    {
+		      throw new IllegalArgumentException("Unexpected URI");
+	    }
+		
+	}
 	
 	
 
