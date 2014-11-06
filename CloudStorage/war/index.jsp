@@ -7,6 +7,11 @@
 <title>Distributed Storage System</title>
 <script  src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
 <script  src="http://malsup.github.io/jquery.form.js"></script>
+<style>
+[class="fileTable"] {
+    border: 1px solid black;
+}
+</style>
 </head>
 	<body>
     <h1>Distributed Storage System</h1><br>
@@ -24,19 +29,33 @@
 	    <input type="hidden" id="action" name="action"/>
     </form>
     
-    <form action="/index.html" method="get" name="submitGet">
+    <form action="#" method="get" name="submitGet">
           <table>
             <tr>
-          	<td><input type="text" name ="fileName"/></td>
-            <td><input type="submit" onclick='changeGetPath(this)' value="Download Content" name="download"/></td>
+          	<td><input type="text" name ="fileName" placeholder="file name"/></td>
+            	<td><input type="submit" onclick='changeGetPath(this)' value="Download Content" name="download"/></td>
             </tr>
+          </table>
+
+    </form>
+	<form id="listFile" name="listFile" enctype="multipart/form-data">
+          <table>
             <tr>
-            	<td><input type="submit" onclick='listAllFiles()' value="List Content" name="download"/></td>
+          	<td><input type="text" name ="filePrefix" placeholder="file prefix"/></td>			
+            	<td><input type="button" onclick='listAllFiles()' value="List Content" name="list"/></td>
             </tr>
+          </table>
+
+          <table class="fileTable" id="fileTableID">
+ 	 	<tr class="fileTable">
+    	  		<th class="fileTable">File name</th>
+    	  		<th class="fileTable">File size</th>
+    	  		<th class="fileTable">Download</th>		
+  		</tr>
           </table>
     </form>
     
-    
+   
     <script type="text/javascript">
     	var bucket = "my-project";
     	function insert(){
@@ -75,10 +94,16 @@
         }
 	
 	function listAllFiles() {
-		document.submitGet.action = "/gcs/" + bucket + "/list/";
+		var filePrefix = document.forms["listFile"]["filePrefix"].value;
+		$.get("/gcs/" + bucket + "/list/" + filePrefix,function(data){
+			alert(data);
+			var resultArray = data.split(/\n/);
+			resultArray.forEach(function(entry) {
+				var fileAttrs = entry.split("/");
+				$("#fileTableID").append("<tr><td>" + fileAttrs[0] + "</td><td>" + fileAttrs[1] + "</td><td><input type='button' value='download'/></td></tr>" );
+			});
+		  });		
 	}
-    	
-    
     </script>
   </body>
 </html>

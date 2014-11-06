@@ -18,6 +18,7 @@ import com.google.appengine.tools.cloudstorage.GcsInputChannel;
 import com.google.appengine.tools.cloudstorage.GcsOutputChannel;
 import com.google.appengine.tools.cloudstorage.GcsService;
 import com.google.appengine.tools.cloudstorage.GcsServiceFactory;
+import com.google.appengine.tools.cloudstorage.ListItem;
 import com.google.appengine.tools.cloudstorage.ListOptions;
 import com.google.appengine.tools.cloudstorage.ListResult;
 import com.google.appengine.tools.cloudstorage.RetryParams;
@@ -36,7 +37,8 @@ public class DistributedStorageHandler {
 		ListResult fileList = gcsService.list(bucket, new ListOptions.Builder().setPrefix(prefix).build());
 		ArrayList<String> fileNames = new ArrayList<String>();
 		while(fileList.hasNext()) {
-			fileNames.add(fileList.next().getName());
+			ListItem fileItem = fileList.next();
+			fileNames.add(fileItem.getName() + "/" + fileItem.getLength());
 		}
 		return fileNames;
 	}
@@ -46,7 +48,7 @@ public class DistributedStorageHandler {
 		GcsInputChannel readChannel = gcsService.openPrefetchingReadChannel(gcsFileName, 0, BUFFER_SIZE);
 		copy(Channels.newInputStream(readChannel), resp.getOutputStream());
 		String mimeType = gcsService.getMetadata(gcsFileName).getOptions().getMimeType();
-		if(mimeType==null){
+		if(mimeType==null) {
 			mimeType = "application/octet-stream";
 		}
 		resp.setContentType(mimeType);

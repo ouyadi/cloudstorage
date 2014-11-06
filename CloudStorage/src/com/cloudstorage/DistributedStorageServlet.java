@@ -67,9 +67,11 @@ public class DistributedStorageServlet extends HttpServlet {
 	    }
 	    else if(splits[3].equals("list"))
 	    {
+		    resp.setContentType("text/plain");
 	    	ArrayList<String> fileNames = dsHandler.listing(splits[2], splits[4]);
 	    	for(String fileName : fileNames) {
 				System.out.println(fileName);
+			    resp.getWriter().println(fileName);
 	    	}
 	    }
 	    else
