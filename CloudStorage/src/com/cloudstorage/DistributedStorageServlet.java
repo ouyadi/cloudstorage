@@ -38,17 +38,18 @@ import javax.servlet.http.HttpServletResponse;
 public class DistributedStorageServlet extends HttpServlet {
 	
 	public static final boolean SERVE_USING_BLOBSTORE_API = false;
+	public static final String BUCKET_NAME = "my-project";
 	
 	
-	private final GcsService gcsService = GcsServiceFactory.createGcsService(new RetryParams.Builder()
-    .initialRetryDelayMillis(10)
-    .retryMaxAttempts(10)
-    .totalRetryPeriodMillis(15000)
-    .build());
+//	private final GcsService gcsService = GcsServiceFactory.createGcsService(new RetryParams.Builder()
+//    .initialRetryDelayMillis(10)
+//    .retryMaxAttempts(10)
+//    .totalRetryPeriodMillis(15000)
+//    .build());
 	
 	private final DistributedStorageHandler dsHandler = new DistributedStorageHandler();
 	
-	private static final int BUFFER_SIZE = 100 * 1024 * 1024;
+//	private static final int BUFFER_SIZE = 100 * 1024 * 1024;
 	
 	@Override
 	  public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -118,9 +119,10 @@ public class DistributedStorageServlet extends HttpServlet {
 		        		action = writer.toString();
 		        	}
 		        } else {
-		        	GcsFilename filename = new GcsFilename("my-project",item.getName());
-		        	GcsOutputChannel outputChannel = gcsService.createOrReplace(filename, GcsFileOptions.getDefaultInstance());
-		        	copy(stream, Channels.newOutputStream(outputChannel));
+		        	dsHandler.insert(BUCKET_NAME, item.getName(), stream);
+//		        	GcsFilename filename = new GcsFilename("my-project",item.getName());
+//		        	GcsOutputChannel outputChannel = gcsService.createOrReplace(filename, GcsFileOptions.getDefaultInstance());
+//		        	copy(stream, Channels.newOutputStream(outputChannel));
 		        }
 		      }
 		    } catch (Exception ex) {
@@ -132,54 +134,29 @@ public class DistributedStorageServlet extends HttpServlet {
 		
 	}
 	
-	private GcsFilename getFileName(HttpServletRequest req) {
-	    String[] splits = req.getRequestURI().split("/", 5);
-	    if (!splits[0].equals("") || !splits[1].equals("gcs")) {
-	      throw new IllegalArgumentException("The URL is not formed as expected. " +
-	          "Expecting /upload/<bucket>/<object>");
-	    }
-	    return new GcsFilename(splits[2], splits[3]);
-	}
+//	private GcsFilename getFileName(HttpServletRequest req) {
+//	    String[] splits = req.getRequestURI().split("/", 5);
+//	    if (!splits[0].equals("") || !splits[1].equals("gcs")) {
+//	      throw new IllegalArgumentException("The URL is not formed as expected. " +
+//	          "Expecting /upload/<bucket>/<object>");
+//	    }
+//	    return new GcsFilename(splits[2], splits[3]);
+//	}
+//	
+//	private void copy(InputStream input, OutputStream output) throws IOException {
+//	    try {
+//	      byte[] buffer = new byte[BUFFER_SIZE];
+//	      int bytesRead = input.read(buffer);
+//	      while (bytesRead != -1) {
+//	        output.write(buffer, 0, bytesRead);
+//	        bytesRead = input.read(buffer);
+//	      }
+//	    } finally {
+//	      input.close();
+//	      output.close();
+//	    }
+//	}
 	
-	private void copy(InputStream input, OutputStream output) throws IOException {
-	    try {
-	      byte[] buffer = new byte[BUFFER_SIZE];
-	      int bytesRead = input.read(buffer);
-	      while (bytesRead != -1) {
-	        output.write(buffer, 0, bytesRead);
-	        bytesRead = input.read(buffer);
-	      }
-	    } finally {
-	      input.close();
-	      output.close();
-	    }
-	}
-	
-	private void processGetRequest(HttpServletRequest req) {
-	    String[] splits = req.getRequestURI().split("/", 5);
-
-	    if (!splits[0].equals("") || !splits[1].equals("gcs")) 
-	    {
-	      throw new IllegalArgumentException("The URL is not formed as expected. " +
-	          "Expecting /upload/<bucket>/<object>");
-	    }
-	    else if (splits[3].equals("download")) 
-	    {
-	    	
-	    }
-	    else if(splits[3].equals("list"))
-	    {
-	    	ArrayList<String> fileNames = dsHandler.listing(splits[3], "");
-	    	for(String fileName : fileNames) {
-				System.out.println(fileName);
-	    	}
-	    }
-	    else
-	    {
-		      throw new IllegalArgumentException("Unexpected URI");
-	    }
-		
-	}
 	
 	
 
