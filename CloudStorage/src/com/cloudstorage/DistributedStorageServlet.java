@@ -80,27 +80,27 @@ public class DistributedStorageServlet extends HttpServlet {
 			    resp.getWriter().println(fileName);
 	    	}
 	    }
+	    else if(splits[3].equals("check"))
+	    {
+	    	Boolean exist = dsHandler.checkExist(splits[2], splits[4]);
+		    resp.getWriter().println("Exist: " + exist);
+
+	    }
+	    else if(splits[3].equals("delete"))
+	    {
+	    	Boolean deleted = dsHandler.delete(splits[2], splits[4]);
+	    	if(deleted) {
+			    resp.getWriter().println("Succeed!");
+	    	}
+	    	else {
+			    resp.getWriter().println("Failed!");
+	    	}
+	    }
 	    else
 	    {
 		      throw new IllegalArgumentException("Unexpected URI");
 	    }
-	    
-		
-		
-//		System.out.println(req);
-//		processGetRequest(req);
-//	    GcsFilename fileName = getFileName(req);
-//	    GcsInputChannel readChannel = gcsService.openPrefetchingReadChannel(fileName, 0, BUFFER_SIZE);
-//	    copy(Channels.newInputStream(readChannel), resp.getOutputStream());
-//	    String mimeType = gcsService.getMetadata(fileName).getOptions().getMimeType();
-//	    if(mimeType==null){
-//	    	mimeType = "application/octet-stream";
-//	    }
-//	    resp.setContentType(mimeType);
-//	    String headerKey = "Content-Disposition";
-//	    String headerValue = String.format("attachment;filename=\"%s\"", fileName.getObjectName());
-//	    resp.setHeader(headerKey, headerValue);
-	  }
+	}
 	
 	@Override
 	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws  IOException, ServletException {
@@ -126,9 +126,6 @@ public class DistributedStorageServlet extends HttpServlet {
 		        	}
 		        } else {
 		        	dsHandler.insert(BUCKET_NAME, item.getName(), stream);
-//		        	GcsFilename filename = new GcsFilename("my-project",item.getName());
-//		        	GcsOutputChannel outputChannel = gcsService.createOrReplace(filename, GcsFileOptions.getDefaultInstance());
-//		        	copy(stream, Channels.newOutputStream(outputChannel));
 		        }
 		      }
 		    } catch (Exception ex) {
@@ -138,32 +135,5 @@ public class DistributedStorageServlet extends HttpServlet {
 		
 		
 		
-	}
-	
-//	private GcsFilename getFileName(HttpServletRequest req) {
-//	    String[] splits = req.getRequestURI().split("/", 5);
-//	    if (!splits[0].equals("") || !splits[1].equals("gcs")) {
-//	      throw new IllegalArgumentException("The URL is not formed as expected. " +
-//	          "Expecting /upload/<bucket>/<object>");
-//	    }
-//	    return new GcsFilename(splits[2], splits[3]);
-//	}
-//	
-//	private void copy(InputStream input, OutputStream output) throws IOException {
-//	    try {
-//	      byte[] buffer = new byte[BUFFER_SIZE];
-//	      int bytesRead = input.read(buffer);
-//	      while (bytesRead != -1) {
-//	        output.write(buffer, 0, bytesRead);
-//	        bytesRead = input.read(buffer);
-//	      }
-//	    } finally {
-//	      input.close();
-//	      output.close();
-//	    }
-//	}
-	
-	
-	
-
+	}	
 }

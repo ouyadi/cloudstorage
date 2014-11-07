@@ -90,9 +90,9 @@ public class DistributedStorageHandler {
 		if(cache.contains(fileName)){
 			success = cache.delete(fileName);
 		}
-		ListResult filesList = gcsService.list(bucket, new ListOptions.Builder().setPrefix(fileName).setRecursive(true).build());
-		while(filesList.hasNext()) {
-			success = gcsService.delete(new GcsFilename(bucket, filesList.next().getName()));
+		ArrayList<String> fileNames = this.listFileNames(bucket);
+		if(fileNames.contains(fileName)) {
+			success = gcsService.delete(new GcsFilename(bucket, fileName));
 		}
 		return success;
 	}
@@ -104,8 +104,8 @@ public class DistributedStorageHandler {
 			exist = true;
 		}
 		else{
-			ListResult filesList = gcsService.list(bucket, new ListOptions.Builder().setPrefix(fileName).setRecursive(true).build());
-			exist = filesList.hasNext();
+			ArrayList<String> fileNames = this.listFileNames(bucket);
+			exist = fileNames.contains(fileName);
 		}
 		return exist;
 		
@@ -123,5 +123,15 @@ public class DistributedStorageHandler {
 			input.close();
 			output.close();
 		}
+	}
+	
+	private ArrayList<String> listFileNames(String bucket) throws IOException {		
+		ListResult fileList = gcsService.list(bucket, new ListOptions.Builder().build());
+		ArrayList<String> fileNames = new ArrayList<String>();
+		while(fileList.hasNext()) {
+			ListItem fileItem = fileList.next();
+			fileNames.add(fileItem.getName());
+		}
+		return fileNames;
 	}
 }

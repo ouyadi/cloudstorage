@@ -35,6 +35,15 @@
           	<td><input type="text" name ="fileName" placeholder="file name"/></td>
             	<td><input type="submit" onclick='changeGetPath(this)' value="Download Content" name="download"/></td>
             </tr>
+            
+	    <tr>
+          	<td><input type="text" name ="existFileName" placeholder="file name"/></td>
+            	<td><input type="button" onclick='checkExist(this)' value="Check Exist" name="download"/></td>
+            </tr>
+            <tr>
+          	<td><input type="text" name ="deleteFileName" placeholder="file name"/></td>
+            	<td><input type="button" onclick='deleteFile(this)' value="Delete" name="download"/></td>
+            </tr>
           </table>
 
     </form>
@@ -93,15 +102,35 @@
             }
         }
 	
+	function downloadFile() {
+              document.submitGet.action = "/gcs/" + bucket + "/download/" + "aaa";
+		
+	}
+	
+	function checkExist() {
+         	var filename = document.forms["submitGet"]["existFileName"].value;
+		var request = new XMLHttpRequest();
+            	request.open("GET", "/gcs/" + bucket + "/check/" + filename, false);
+		request.send();
+		alert(request.response);
+	}
+	function deleteFile() {
+         	var filename = document.forms["submitGet"]["deleteFileName"].value;
+		var request = new XMLHttpRequest();
+            	request.open("GET", "/gcs/" + bucket + "/delete/" + filename, false);
+		request.send();
+		alert(request.response);
+	}
 	function listAllFiles() {
 		var filePrefix = document.forms["listFile"]["filePrefix"].value;
 		$.get("/gcs/" + bucket + "/list/" + filePrefix,function(data){
 			alert(data);
 			var resultArray = data.split(/\n/);
-			resultArray.forEach(function(entry) {
-				var fileAttrs = entry.split("/");
-				$("#fileTableID").append("<tr><td>" + fileAttrs[0] + "</td><td>" + fileAttrs[1] + "</td><td><input type='button' value='download'/></td></tr>" );
-			});
+			for(i = 0; i < resultArray.length - 1; i++) {
+				var fileAttrs = resultArray[i].split("/");
+				$("#fileTableID").append("<tr><td>" + fileAttrs[0] + "</td><td>" + fileAttrs[1] + "</td><td><input type='button' value='download' onclick='downloadFile()'/></td></tr>" );
+
+			}
 		  });		
 	}
     </script>
