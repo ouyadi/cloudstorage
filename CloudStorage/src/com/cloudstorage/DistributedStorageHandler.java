@@ -5,19 +5,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.Channels;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 
-import com.google.appengine.api.blobstore.BlobKey;
-import com.google.appengine.api.blobstore.BlobstoreService;
-import com.google.appengine.api.blobstore.BlobstoreServiceFactory;
 import com.google.appengine.api.memcache.AsyncMemcacheService;
-import com.google.appengine.api.memcache.ErrorHandlers;
 import com.google.appengine.api.memcache.MemcacheService;
 import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.google.appengine.tools.cloudstorage.GcsFileOptions;
@@ -30,7 +23,6 @@ import com.google.appengine.tools.cloudstorage.ListItem;
 import com.google.appengine.tools.cloudstorage.ListOptions;
 import com.google.appengine.tools.cloudstorage.ListResult;
 import com.google.appengine.tools.cloudstorage.RetryParams;
-import com.google.apphosting.api.ApiProxy.LogRecord.Level;
 
 public class DistributedStorageHandler {
 
@@ -48,7 +40,7 @@ public class DistributedStorageHandler {
 		ArrayList<String> fileNames = new ArrayList<String>();
 		while(fileList.hasNext()) {
 			ListItem fileItem = fileList.next();
-			fileNames.add(fileItem.getName() + "/" + fileItem.getLength());
+			fileNames.add(fileItem.getName() + "/" + fileItem.getLength()/1024+"kB");
 		}
 		return fileNames;
 	}
@@ -56,6 +48,7 @@ public class DistributedStorageHandler {
 	public HttpServletResponse retrieve (String bucket, String fileName,  HttpServletResponse resp) throws IOException, InterruptedException, ExecutionException {
 	    AsyncMemcacheService asyncCache = MemcacheServiceFactory.getAsyncMemcacheService();
 	    byte[] value;
+	    GcsFilename gcsFileName = new GcsFilename(bucket, fileName);
 	    String mimeType=null;
 		Future<Object> futureValue = asyncCache.get(fileName); 
 		value = (byte[])futureValue.get();
@@ -65,7 +58,6 @@ public class DistributedStorageHandler {
 			output.close();
 		}
 		else{
-			GcsFilename gcsFileName = new GcsFilename(bucket, fileName);
 			GcsInputChannel readChannel = gcsService.openPrefetchingReadChannel(gcsFileName, 0, BUFFER_SIZE);
 			copy(Channels.newInputStream(readChannel), resp.getOutputStream());
 			mimeType = gcsService.getMetadata(gcsFileName).getOptions().getMimeType();
@@ -74,11 +66,10 @@ public class DistributedStorageHandler {
 			mimeType = "application/octet-stream";
 		}
 		resp.setContentType(mimeType);
-//		String headerKey = "Content-Disposition";
-//		String headerValue = String.format("attachment;filename=\"%s\"", gcsFileName.getObjectName());
-//		resp.setHeader(headerKey, headerValue);
+		String headerKey = "Content-Disposition";
+		String headerValue = String.format("attachment;filename=\"%s\"", gcsFileName.getObjectName());
+		resp.setHeader(headerKey, headerValue);
 		return resp;
-
 	}
 
 	public void insert (String bucket, String fileName, InputStream inputStream) throws IOException, InterruptedException, ExecutionException {
@@ -87,13 +78,10 @@ public class DistributedStorageHandler {
 			inputStream.read(value);
 			AsyncMemcacheService asyncCache =  MemcacheServiceFactory.getAsyncMemcacheService();
 			asyncCache.put(fileName, value);
-			
 		}
-		else{
-			GcsFilename filename = new GcsFilename(bucket, fileName);
-			GcsOutputChannel outputChannel = gcsService.createOrReplace(filename, GcsFileOptions.getDefaultInstance());
-			copy(inputStream, Channels.newOutputStream(outputChannel));
-		}
+		GcsFilename filename = new GcsFilename(bucket, fileName);
+		GcsOutputChannel outputChannel = gcsService.createOrReplace(filename, GcsFileOptions.getDefaultInstance());
+		copy(inputStream, Channels.newOutputStream(outputChannel));
 	}
 
 	public Boolean delete (String bucket, String fileName) throws IOException {
@@ -102,11 +90,9 @@ public class DistributedStorageHandler {
 		if(cache.contains(fileName)){
 			success = cache.delete(fileName);
 		}
-		else{
-			ListResult filesList = gcsService.list(bucket, new ListOptions.Builder().setPrefix(fileName).setRecursive(true).build());
-			while(filesList.hasNext()) {
-				success = gcsService.delete(new GcsFilename(bucket, filesList.next().getName()));
-			}
+		ListResult filesList = gcsService.list(bucket, new ListOptions.Builder().setPrefix(fileName).setRecursive(true).build());
+		while(filesList.hasNext()) {
+			success = gcsService.delete(new GcsFilename(bucket, filesList.next().getName()));
 		}
 		return success;
 	}
