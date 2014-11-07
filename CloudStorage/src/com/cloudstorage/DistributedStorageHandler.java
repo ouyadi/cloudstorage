@@ -43,9 +43,7 @@ public class DistributedStorageHandler {
 	.totalRetryPeriodMillis(15000)
 	.build());
 
-	public ArrayList<String> listing(String bucket, String prefix) throws IOException {
-		MemcacheService cache =  MemcacheServiceFactory.getMemcacheService();
-		
+	public ArrayList<String> listing(String bucket, String prefix) throws IOException {		
 		ListResult fileList = gcsService.list(bucket, new ListOptions.Builder().setPrefix(prefix).build());
 		ArrayList<String> fileNames = new ArrayList<String>();
 		while(fileList.hasNext()) {

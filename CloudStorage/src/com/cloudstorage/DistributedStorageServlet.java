@@ -1,18 +1,5 @@
 package com.cloudstorage;
 
-import com.google.appengine.api.blobstore.BlobKey;
-import com.google.appengine.api.blobstore.BlobstoreService;
-import com.google.appengine.api.blobstore.BlobstoreServiceFactory;
-import com.google.appengine.tools.cloudstorage.GcsFileOptions;
-import com.google.appengine.tools.cloudstorage.GcsFilename;
-import com.google.appengine.tools.cloudstorage.GcsInputChannel;
-import com.google.appengine.tools.cloudstorage.GcsOutputChannel;
-import com.google.appengine.tools.cloudstorage.GcsService;
-import com.google.appengine.tools.cloudstorage.GcsServiceFactory;
-import com.google.appengine.tools.cloudstorage.ListOptions;
-import com.google.appengine.tools.cloudstorage.ListResult;
-import com.google.appengine.tools.cloudstorage.RetryParams;
-
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
@@ -24,11 +11,11 @@ import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.StringWriter;
-import java.nio.channels.Channels;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
+
+
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -64,6 +51,16 @@ public class DistributedStorageServlet extends HttpServlet {
 	    }
 	    else if (splits[3].equals("download")) 
 	    {
+	    	try {
+				dsHandler.retrieve(splits[2], splits[4], resp);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (ExecutionException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
 	    	try {
 				dsHandler.retrieve(splits[2], splits[4], resp);
 			} catch (InterruptedException e) {
