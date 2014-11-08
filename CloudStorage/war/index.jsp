@@ -11,6 +11,10 @@
 [class="fileTable"] {
     border: 1px solid black;
 }
+[class="listRow"] {
+    border: 1px solid black;
+}
+
 </style>
 </head>
 	<body>
@@ -35,13 +39,22 @@
           	<td><input type="text" name ="fileName" placeholder="file name"/></td>
             	<td><input type="submit" onclick='changeGetPath(this)' value="Download Content" name="download"/></td>
             </tr>
+            
+	    <tr>
+          	<td><input type="text" name ="existFileName" placeholder="file name"/></td>
+            	<td><input type="button" onclick='checkExist(this)' value="Check Exist" name="download"/></td>
+            </tr>
+            <tr>
+          	<td><input type="text" name ="deleteFileName" placeholder="file name"/></td>
+            	<td><input type="button" onclick='deleteFile(this)' value="Delete" name="download"/></td>
+            </tr>
           </table>
 
     </form>
 	<form id="listFile" name="listFile" enctype="multipart/form-data">
           <table>
             <tr>
-          	<td><input type="text" name ="filePrefix" placeholder="file prefix"/></td>			
+          	<td><input type="text" name ="filePrefix" placeholder="keyword"/></td>			
             	<td><input type="button" onclick='listAllFiles()' value="List Content" name="list"/></td>
             </tr>
           </table>
@@ -50,7 +63,6 @@
  	 	<tr class="fileTable">
     	  		<th class="fileTable">File name</th>
     	  		<th class="fileTable">File size</th>
-    	  		<th class="fileTable">Download</th>		
   		</tr>
           </table>
     </form>
@@ -93,17 +105,39 @@
             }
         }
 	
-	function listAllFiles() {
-		var filePrefix = document.forms["listFile"]["filePrefix"].value;
-		$.get("/gcs/" + bucket + "/list/" + filePrefix,function(data){
-			alert(data);
-			var resultArray = data.split(/\n/);
-			resultArray.forEach(function(entry) {
-				var fileAttrs = entry.split("/");
-				$("#fileTableID").append("<tr><td>" + fileAttrs[0] + "</td><td>" + fileAttrs[1] + "</td><td><input type='button' value='download'/></td></tr>" );
-			});
-		  });		
+	function downloadFile() {
+              document.submitGet.action = "/gcs/" + bucket + "/download/" + "aaa";
+		
 	}
+	
+	function checkExist() {
+         	var filename = document.forms["submitGet"]["existFileName"].value;
+		var request = new XMLHttpRequest();
+            	request.open("GET", "/gcs/" + bucket + "/check/" + filename, false);
+		request.send();
+		alert(request.response);
+	}
+	function deleteFile() {
+         	var filename = document.forms["submitGet"]["deleteFileName"].value;
+		var request = new XMLHttpRequest();
+            	request.open("GET", "/gcs/" + bucket + "/delete/" + filename, false);
+		request.send();
+		alert(request.response);
+	}
+	function listAllFiles() {
+		var keyword = document.forms["listFile"]["filePrefix"].value;
+		var request = new XMLHttpRequest();
+            	request.open("GET", "/gcs/" + bucket + "/list/" + keyword, false);
+		request.send();
+		var data = request.response;
+		alert(request.response);
+		$(".listRow").remove();
+		var resultArray = data.split(/\n/);
+		for(i = 0; i < resultArray.length - 1; i++) {
+			var fileAttrs = resultArray[i].split("/");
+			$("#fileTableID").append("<tr class='listRow'><td class='listRow'>" + fileAttrs[0] + "</td><td class='listRow'>" + fileAttrs[1] + "</td></tr>" );
+		}
+	  }
     </script>
   </body>
 </html>
