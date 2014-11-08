@@ -7,7 +7,6 @@ import java.nio.channels.Channels;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -36,20 +35,14 @@ public class DistributedStorageHandler {
 	.totalRetryPeriodMillis(15000)
 	.build());
 
-	public ArrayList<String> listing(String bucket, String keyWord) throws IOException {		
-		ListResult fileList = gcsService.list(bucket, new ListOptions.Builder().build());
+	public ArrayList<String> listing(String bucket, String prefix) throws IOException {		
+		ListResult fileList = gcsService.list(bucket, new ListOptions.Builder().setPrefix(prefix).build());
 		ArrayList<String> fileNames = new ArrayList<String>();
 		while(fileList.hasNext()) {
 			ListItem fileItem = fileList.next();
-			fileNames.add(fileItem.getName()+ "/" + fileItem.getLength()/1024+"kB");
+			fileNames.add(fileItem.getName() + "/" + fileItem.getLength()/1024+"kB");
 		}
-		ArrayList<String> matches = new ArrayList<String>();
-		for(String fileName:fileNames) {
-			if(fileName.split("/")[0].contains(keyWord)) {
-				matches.add(fileName);
-			}
-		}
-		return matches;
+		return fileNames;
 	}
 
 	public HttpServletResponse retrieve (String bucket, String fileName,  HttpServletResponse resp) throws IOException, InterruptedException, ExecutionException {
@@ -133,7 +126,7 @@ public class DistributedStorageHandler {
 	}
 	
 	private ArrayList<String> listFileNames(String bucket) throws IOException {		
-		ListResult fileList = gcsService.list(bucket, new ListOptions.Builder().build());
+		ListResult fileList = gcsService.list(bucket, new ListOptions.Builder().setPrefix("").build());
 		ArrayList<String> fileNames = new ArrayList<String>();
 		while(fileList.hasNext()) {
 			ListItem fileItem = fileList.next();
